@@ -2,6 +2,9 @@ QT       += core gui widgets
 win32 {
     LIBS += -lPsapi -lDwmapi
 }
+macx {
+    LIBS += -framework CoreGraphics
+}
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17

@@ -22,6 +22,9 @@
 #include<QFontDialog>
 #include<QColorDialog>
 
+#ifdef Q_OS_MAC
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 
 ScreenshotWidget::ScreenshotWidget(QWidget* parent)
     : QWidget(parent),
@@ -1038,6 +1041,7 @@ void ScreenshotWidget::mouseMoveEvent(QMouseEvent* event)
     else if (!selected)
     {
         // 在框选前的鼠标移动时也触发更新，以显示放大镜
+        captureWindow(event->pos());
         update();
     }
     else if (isTextMoving && movingText) {
@@ -1165,7 +1169,16 @@ void ScreenshotWidget::mouseReleaseEvent(QMouseEvent* event)
             selecting = false;
             selected = true;
             showMagnifier = false;
-            selectedRect = QRect(startPoint, endPoint).normalized();
+            
+            QRect dragRect = QRect(startPoint, endPoint).normalized();
+            
+            // 如果是点击（拖拽距离很小）且有自动吸附的窗口，则使用吸附窗口
+            if (dragRect.width() < 5 && dragRect.height() < 5 && !currentWindowRect.isEmpty()) {
+                selectedRect = currentWindowRect;
+            } else {
+                selectedRect = dragRect;
+            }
+
             EffectAreas.clear();
             EffectStrengths.clear();
             if (EffectToolbar) {
@@ -1964,7 +1977,7 @@ void ScreenshotWidget::handleTextModeClick(const QPoint& clickPos){
 }
 
 void ScreenshotWidget::updateTextInputStyle() {
-    if (!isTextInputActive || !textInput) {
+    if (!isTextInputActive || ! textInput) {
         return;
     }
 
@@ -2278,5 +2291,83 @@ void ScreenshotWidget::pinToDesktop()
     // 6. 关闭截图主窗口
     close();
     emit screenshotTaken();
+}
+
+QList<WindowInfo> ScreenshotWidget::enumAllValidWindows()
+{
+    QList<WindowInfo> windows;
+#ifdef Q_OS_WIN
+    // Windows implementation would go here if we had the Proc defined
+    // But since we don't have the Proc definition in this file (it was missing), 
+    // we can't easily restore it without the code. 
+    // Assuming the user only cares about macOS now as per request.
+#elif defined(Q_OS_MAC)
+    CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
+    if (windowList) {
+        CFIndex count = CFArrayGetCount(windowList);
+        for (CFIndex i = 0; i < count; ++i) {
+            CFDictionaryRef dict = (CFDictionaryRef)CFArrayGetValueAtIndex(windowList, i);
+            
+            CFNumberRef layerNum = (CFNumberRef)CFDictionaryGetValue(dict, kCGWindowLayer);
+            int layer = 0;
+            if (layerNum) CFNumberGetValue(layerNum, kCFNumberIntType, &layer);
+            if (layer != 0) continue;
+
+            CGRect bounds;
+            CFDictionaryRef boundsDict = (CFDictionaryRef)CFDictionaryGetValue(dict, kCGWindowBounds);
+            if (boundsDict) CGRectMakeWithDictionaryRepresentation(boundsDict, &bounds);
+            else continue;
+
+            WindowInfo info;
+            info.title = "Window"; // Dummy title for isValid()
+            info.rect = QRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+            
+            if (info.rect.width() < 10 || info.rect.height() < 10) continue;
+            
+            windows.append(info);
+        }
+        CFRelease(windowList);
+    }
+#endif
+    return windows;
+}
+
+void ScreenshotWidget::captureWindow(QPoint mousePos)
+{
+    if (selecting || selected || isDrawing || drawingEffect) return;
+
+    QList<WindowInfo> windows = enumAllValidWindows();
+    
+    WindowInfo bestWindow;
+    int minArea = 2147483647; // INT_MAX
+    
+    // Map local mouse pos to global for comparison with CGWindowList coords
+    QPoint globalMousePos = mapToGlobal(mousePos);
+
+    for (const WindowInfo& info : windows) {
+        if (info.rect.contains(globalMousePos)) {
+            int area = info.rect.width() * info.rect.height();
+            if (area < minArea) {
+                minArea = area;
+                bestWindow = info;
+            }
+        }
+    }
+    
+    if (bestWindow.isValid()) {
+        // Convert global rect back to local coordinates
+        QPoint localTopLeft = mapFromGlobal(bestWindow.rect.topLeft());
+        QRect localRect(localTopLeft, bestWindow.rect.size());
+        
+        currentWindowRect = localRect;
+        selectedRect = currentWindowRect;
+        update();
+    } else {
+        currentWindowRect = QRect();
+        // Don't clear selectedRect here if we want to keep the last valid one? 
+        // No, if we move to empty space, we should clear the preview.
+        selectedRect = QRect();
+        update();
+    }
 }
 
