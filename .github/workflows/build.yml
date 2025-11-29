@@ -1,0 +1,69 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'mac'
+        
+    - name: Install Dependencies
+      run: |
+        brew update
+        brew install opencv tesseract
+        
+    - name: Configure Project (local_config.pri)
+      run: |
+        # Generate a local config for CI environment
+        echo "macx: {" > local_config.pri
+        echo "    DEFINES += USE_TESSERACT" >> local_config.pri
+        echo "    INCLUDEPATH += /usr/local/include /opt/homebrew/include" >> local_config.pri
+        echo "    LIBS += -L/usr/local/lib -L/opt/homebrew/lib -ltesseract -lleptonica" >> local_config.pri
+        echo "    INCLUDEPATH += /usr/local/opt/opencv/include/opencv4 /opt/homebrew/opt/opencv/include/opencv4" >> local_config.pri
+        echo "    LIBS += -L/usr/local/opt/opencv/lib -L/opt/homebrew/opt/opencv/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio" >> local_config.pri
+        echo "}" >> local_config.pri
+        
+    - name: Build
+      run: |
+        qmake ScreenSniper.pro
+        make
+        
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'linux'
+        
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libgl1-mesa-dev libopencv-dev libtesseract-dev libleptonica-dev
+        
+    - name: Configure Project (local_config.pri)
+      run: |
+        # Linux usually installs to standard paths, but we need to link libraries
+        echo "unix:!macx: {" > local_config.pri
+        echo "    DEFINES += USE_TESSERACT" >> local_config.pri
+        echo "    LIBS += -ltesseract -lleptonica -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio" >> local_config.pri
+        echo "}" >> local_config.pri
+        
+    - name: Build
+      run: |
+        qmake ScreenSniper.pro
+        make
