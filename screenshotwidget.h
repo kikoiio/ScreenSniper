@@ -261,6 +261,17 @@ private:
     QPushButton* btnPenWidthDown;
     QLabel* penWidthLabel;
 
+    // 形状工具栏
+    QWidget* shapesToolbar;
+    QPushButton* btnShapes; // 主工具栏上的形状按钮
+    QPushButton* btnShapeColor;
+    QPushButton* btnShapeWidthUp;
+    QPushButton* btnShapeWidthDown;
+    QLabel* shapeWidthLabel;
+    void setupShapesToolbar();
+    void updateShapesToolbarPosition();
+    void updateShapeWidthLabel();
+
     // 高斯模糊相关
     QWidget* blurToolbar;
     QPushButton* btnBlurStrengthDown;

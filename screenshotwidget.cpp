@@ -59,6 +59,8 @@ ScreenshotWidget::ScreenshotWidget(QWidget* parent)
     currentPenColor(Qt::red),
     currentPenWidth(3),
     penToolbar(nullptr),
+    shapesToolbar(nullptr),
+    blurToolbar(nullptr),
     currentTextFont("Arial",18),
     currentTextColor(Qt::red),
     currentFontSize(18),
@@ -76,6 +78,7 @@ ScreenshotWidget::ScreenshotWidget(QWidget* parent)
     setupToolbar();
     setTextToolbar();
     setupPenToolbar();
+    setupShapesToolbar();
     setupTextInput();
     currentPenStroke.clear();
     penStrokes.clear();
@@ -112,9 +115,7 @@ void ScreenshotWidget::setupToolbar()
     layout->setContentsMargins(10, 5, 10, 5);
 
     // 绘制工具
-    btnRect = new QPushButton("矩形", toolbar);
-    btnEllipse = new QPushButton("椭圆", toolbar);
-    btnArrow = new QPushButton("箭头", toolbar);
+    btnShapes = new QPushButton("形状", toolbar);
     btnText = new QPushButton("文字", toolbar);
     btnPen = new QPushButton("画笔", toolbar);
     btnMosaic = new QPushButton("马赛克", toolbar);
@@ -126,9 +127,7 @@ void ScreenshotWidget::setupToolbar()
     btnPin = new QPushButton("Pin", toolbar);
     btnCancel = new QPushButton("取消", toolbar);
 
-    layout->addWidget(btnRect);
-    layout->addWidget(btnEllipse);
-    layout->addWidget(btnArrow);
+    layout->addWidget(btnShapes);
     layout->addWidget(btnText);
     layout->addWidget(btnPen);
 
@@ -172,12 +171,30 @@ void ScreenshotWidget::setupToolbar()
     connect(btnPin, &QPushButton::clicked, this, &ScreenshotWidget::pinToDesktop);
     connect(btnCancel, &QPushButton::clicked, this, &ScreenshotWidget::cancelCapture);
 
-    connect(btnRect, &QPushButton::clicked, this, [this]()
-        { selected = true;currentDrawMode = Rectangle; toolbar->show(); EffectToolbar->hide(); });
-    connect(btnEllipse, &QPushButton::clicked, this, [this]()
-        { selected = true;currentDrawMode = Ellipse; toolbar->show(); EffectToolbar->hide(); });
-    connect(btnArrow, &QPushButton::clicked, this, [this]()
-        { selected = true;currentDrawMode = Arrow; toolbar->show(); EffectToolbar->hide(); });
+    connect(btnShapes, &QPushButton::clicked, this, [this]()
+        {
+            // 显示形状工具栏
+            if (shapesToolbar->isVisible()) {
+                shapesToolbar->hide();
+            } else {
+                // 隐藏其他工具栏
+                if (penToolbar) penToolbar->hide();
+                if (fontToolbar) fontToolbar->hide();
+                if (EffectToolbar) EffectToolbar->hide();
+
+                // 获取按钮位置
+                QPoint btnPos = btnShapes->mapToGlobal(QPoint(0, 0));
+                QPoint localPos = this->mapFromGlobal(btnPos);
+
+                int x = localPos.x();
+                int y = localPos.y() + btnShapes->height() + 5;
+
+                shapesToolbar->move(x, y);
+                shapesToolbar->show();
+                shapesToolbar->raise();
+            }
+        });
+
     connect(btnText, &QPushButton::clicked, this, [this]()
         {
             selected = true;
@@ -185,6 +202,7 @@ void ScreenshotWidget::setupToolbar()
             toolbar->show();
             EffectToolbar->hide();
             penToolbar->hide();  // 隐藏其他工具栏
+            if (shapesToolbar) shapesToolbar->hide();
 
             // 切换字体工具栏的显示状态（像画笔功能一样）
             if (fontToolbar && fontToolbar->isVisible()) {
@@ -217,6 +235,8 @@ void ScreenshotWidget::setupToolbar()
                     currentDrawMode = Pen;
                     toolbar->show();
                     EffectToolbar->hide();
+                    if (shapesToolbar) shapesToolbar->hide();
+                    if (fontToolbar) fontToolbar->hide();
 
                     // 切换画笔工具栏的显示状态（像马赛克功能一样）
                     if (penToolbar->isVisible()) {
@@ -882,16 +902,16 @@ void ScreenshotWidget::paintEvent(QPaintEvent* event)
     {
         if (currentDrawMode == Arrow)
         {
-            drawArrow(painter, drawStartPoint, drawEndPoint, QColor(255, 0, 0), 3);
+            drawArrow(painter, drawStartPoint, drawEndPoint, currentPenColor, currentPenWidth);
         }
         else if (currentDrawMode == Rectangle)
         {
-            painter.setPen(QPen(QColor(255, 0, 0), 3));
+            painter.setPen(QPen(currentPenColor, currentPenWidth));
             painter.setBrush(Qt::NoBrush);
             painter.drawRect(QRect(drawStartPoint, drawEndPoint).normalized());
         }
         else if (currentDrawMode == Ellipse) {
-            painter.setPen(QPen(QColor(255, 0, 0), 3));
+            painter.setPen(QPen(currentPenColor, currentPenWidth));
             painter.setBrush(Qt::NoBrush);
             painter.drawEllipse(QRect(drawStartPoint, drawEndPoint).normalized());
 
@@ -1060,18 +1080,15 @@ void ScreenshotWidget::mousePressEvent(QMouseEvent* event)
             selecting = true;
             selected = false;
             // showMagnifier已经在startCapture时设置为true，这里不需要重复设置
-            if (toolbar) {
-                toolbar->hide();
-            }
+            if (toolbar) toolbar->hide();
+            if (shapesToolbar) shapesToolbar->hide();
+            if (penToolbar) penToolbar->hide();
+            if (fontToolbar) fontToolbar->hide();
+            if (EffectToolbar) EffectToolbar->hide();
+
             showMagnifier = true;
-            if (toolbar) {
-                toolbar->hide();
-            }
+
             EffectAreas.clear(); // 清除之前的模糊区域
-            if (EffectToolbar) {
-                EffectToolbar->hide(); // 隐藏马赛克工具栏
-            }
-            EffectAreas.clear();
             EffectStrengths.clear();
             effectTypes.clear();  // 清除效果类型
         }
@@ -1234,24 +1251,24 @@ void ScreenshotWidget::mouseReleaseEvent(QMouseEvent* event)
                     DrawnArrow arrow;
                     arrow.start = drawStartPoint;
                     arrow.end = drawEndPoint;
-                    arrow.color = QColor(255, 0, 0);
-                    arrow.width = 3;
+                    arrow.color = currentPenColor;
+                    arrow.width = currentPenWidth;
                     arrows.append(arrow);
                 }
                 else if (currentDrawMode == Rectangle)
                 {
                     DrawnRectangle rect;
                     rect.rect = QRect(drawStartPoint, drawEndPoint).normalized();
-                    rect.color = QColor(255, 0, 0);
-                    rect.width = 3;
+                    rect.color = currentPenColor;
+                    rect.width = currentPenWidth;
                     rectangles.append(rect);
                 }
                 else if (currentDrawMode == Ellipse)
                 {
                     DrawnEllipse ellipse;
                     ellipse.rect = QRect(drawStartPoint, drawEndPoint).normalized();
-                    ellipse.color = QColor(255, 0, 0);
-                    ellipse.width = 3;
+                    ellipse.color = currentPenColor;
+                    ellipse.width = currentPenWidth;
                     ellipses.append(ellipse);
                 }
             }
@@ -1298,6 +1315,7 @@ void ScreenshotWidget::mouseReleaseEvent(QMouseEvent* event)
             }
 
             if (!selectedRect.isEmpty()) {
+                selected = true;
                 updateToolbarPosition();
                 toolbar->show();
             }
@@ -1955,6 +1973,8 @@ void ScreenshotWidget::setTextToolbar(){
     if(fontToolbar){        
         return;
     }
+
+
     
     fontToolbar = new QWidget(this);
     fontToolbar->setStyleSheet(
@@ -2130,96 +2150,6 @@ void ScreenshotWidget::onFontFamilyClicked(){
     }
 }
 
-void ScreenshotWidget::handleTextModeClick(const QPoint& clickPos){
-    //显示文本输入框
-    if (textInput) {
-        textInputPosition = clickPos;
-        textInput->move(clickPos);
-        textInput->resize(200, 30);
-        textInput->show();
-        textInput->setFocus();
-        textInput->clear();
-        isTextInputActive = true;
-    }
-    // 不再自动显示字体工具栏，由用户点击文本按钮控制
-}
-
-void ScreenshotWidget::updateTextInputStyle() {
-    if (!isTextInputActive || ! textInput) {
-        return;
-    }
-
-    // 更新文本输入框的字体和颜色
-    textInput->setFont(currentTextFont);
-    
-    QPalette palette = textInput->palette();
-    palette.setColor(QPalette::Text, currentTextColor);
-    textInput->setPalette(palette);
-
-    // 更新输入框的大小以适应新的字体大小
-    updateTextInputSize();
-}
-
-void ScreenshotWidget::updateTextInputSize() {
-    if (!isTextInputActive || !textInput) {
-        return;
-    }
-
-    // 获取当前文本和字体
-    QString text = textInput->text();
-    QFont font = currentTextFont;
-
-    // 计算文本的实际大小
-    QFontMetrics metrics(font);
-    QRect textRect = metrics.boundingRect(text.isEmpty() ? "输入文字..." : text);
-
-    // 确保最小宽度和高度
-    int width = qMax(textRect.width() + 10, 100);
-    int height = qMax(textRect.height() + 10, 30);
-
-    // 只有当大小真正改变时才调整，避免频繁的resize操作
-    if (textInput->width() != width || textInput->height() != height) {
-        textInput->resize(width, height);
-
-        // 只在大小改变时更新工具栏位置
-        updateFontToolbarPosition();
-    }
-}
-
-void ScreenshotWidget::updateFontToolbarPosition(){    
-    if(!fontToolbar || !selected){
-        return;
-    }
-    int toolbarWidth = fontToolbar->sizeHint().width();
-    int toolbarHeight = fontToolbar->sizeHint().height();
-
-    // 将字体工具栏放在主工具栏下方
-    int x = toolbar->x();
-    int y = toolbar->y() + toolbar->height() + 5;
-
-    // 如果下方空间不够，就放在上方
-    if(y + toolbarHeight > height()){
-        y = toolbar->y() - toolbarHeight - 5;
-    }
-
-    // 确保不超出屏幕边界
-    if(x + toolbarWidth > width()){
-        x = width() - toolbarWidth - 5;
-    }
-    if(x < 5) x = 5;
-
-    fontToolbar->move(x,y);
-}
-void ScreenshotWidget::handleNoneMode(const QPoint& clickPos){
-    for (int i = texts.size() - 1; i >= 0; i--) {
-        if (texts[i].rect.contains(clickPos)) {
-            // 单击选中文字，准备拖拽
-            setCursor(Qt::PointingHandCursor);
-            break;
-        }
-    }
-}
-
 void ScreenshotWidget::setupPenToolbar(){
     //画笔工具栏设置
     penToolbar = new QWidget(this);
@@ -2258,7 +2188,9 @@ void ScreenshotWidget::setupPenToolbar(){
     //粗细调节按钮
     btnPenWidthUp = new QPushButton("+",penToolbar);
     btnPenWidthDown = new QPushButton("-", penToolbar);
-    penWidthLabel = new QLabel(QString("%1px").arg(currentPenWidth),penToolbar);
+    penWidthLabel = new QLabel(QString("%1px").arg(currentPenWidth), penToolbar);
+    penWidthLabel->setFixedWidth(40);
+    penWidthLabel->setAlignment(Qt::AlignCenter);
 
     //添加预览标签
     QLabel *previewLabel = new QLabel("预览:",penToolbar);
@@ -2356,6 +2288,9 @@ void ScreenshotWidget::decreasePenWidth(){
 void ScreenshotWidget::updatePenWidthLabel(){
     if(penWidthLabel){
         penWidthLabel->setText(QString("%1px").arg(currentPenWidth));
+    }
+    if(shapeWidthLabel){
+        shapeWidthLabel->setText(QString("%1px").arg(currentPenWidth));
     }
 }
 
@@ -2852,5 +2787,175 @@ void ScreenshotWidget::mouseIsAdjust(QPoint mousePos)
         }
     }
 
+}
+
+void ScreenshotWidget::setupShapesToolbar()
+{
+    shapesToolbar = new QWidget(this);
+    shapesToolbar->setStyleSheet(
+        "QWidget { background-color: rgba(40, 40, 40, 200); border-radius: 5px; }"
+        "QPushButton { background-color: rgba(60, 60, 60, 255); color: white; "
+        "border: none; padding: 8px 15px; border-radius: 3px; font-size: 13px; }"
+        "QPushButton:hover { background-color: rgba(80, 80, 80, 255); }"
+        "QPushButton:pressed { background-color: rgba(50, 50, 50, 255); }"
+        "QLabel { background-color: transparent; color: white; padding: 5px; font-size: 12px; }"
+        "QPushButton:checked { background-color: rgba(0, 150, 255, 255); }"
+    );
+
+    QHBoxLayout* layout = new QHBoxLayout(shapesToolbar);
+    layout->setSpacing(5);
+    layout->setContentsMargins(10, 8, 10, 8);
+
+    btnRect = new QPushButton("矩形", shapesToolbar);
+    btnRect->setCheckable(true);
+    btnEllipse = new QPushButton("椭圆", shapesToolbar);
+    btnEllipse->setCheckable(true);
+    btnArrow = new QPushButton("箭头", shapesToolbar);
+    btnArrow->setCheckable(true);
+
+    // 形状颜色选择
+    btnShapeColor = new QPushButton("颜色", shapesToolbar);
+    btnShapeColor->setObjectName("colorBtn");
+    btnShapeColor->setStyleSheet(QString(
+            "QPushButton#colorBtn{"
+            "background-color:%1; "
+            "color:%2; "
+            "border: 2px solid white; "
+            "font-weight: bold; "
+            "min-width: 60px; "
+            "}"
+            ).arg(currentPenColor.name())
+            .arg(currentPenColor.lightness()<128?"white":"black"));
+
+    // 形状粗细
+    btnShapeWidthDown = new QPushButton("-", shapesToolbar);
+    btnShapeWidthUp = new QPushButton("+", shapesToolbar);
+    shapeWidthLabel = new QLabel(QString("%1px").arg(currentPenWidth), shapesToolbar);
+    shapeWidthLabel->setFixedWidth(40);
+    shapeWidthLabel->setAlignment(Qt::AlignCenter);
+
+    layout->addWidget(btnRect);
+    layout->addWidget(btnEllipse);
+    layout->addWidget(btnArrow);
+    layout->addSpacing(10);
+    layout->addWidget(btnShapeColor);
+    layout->addSpacing(5);
+    layout->addWidget(new QLabel("粗细:", shapesToolbar));
+    layout->addWidget(btnShapeWidthDown);
+    layout->addWidget(shapeWidthLabel);
+    layout->addWidget(btnShapeWidthUp);
+
+    shapesToolbar->adjustSize();
+    shapesToolbar->hide();
+
+    // Connect signals
+    connect(btnRect, &QPushButton::clicked, this, [this]() {
+        currentDrawMode = Rectangle;
+        btnRect->setChecked(true);
+        btnEllipse->setChecked(false);
+        btnArrow->setChecked(false);
+    });
+    connect(btnEllipse, &QPushButton::clicked, this, [this]() {
+        currentDrawMode = Ellipse;
+        btnRect->setChecked(false);
+        btnEllipse->setChecked(true);
+        btnArrow->setChecked(false);
+    });
+    connect(btnArrow, &QPushButton::clicked, this, [this]() {
+        currentDrawMode = Arrow;
+        btnRect->setChecked(false);
+        btnEllipse->setChecked(false);
+        btnArrow->setChecked(true);
+    });
+
+    connect(btnShapeColor, &QPushButton::clicked, this, &ScreenshotWidget::onColorPickerClicked);
+    connect(btnShapeWidthUp, &QPushButton::clicked, this, &ScreenshotWidget::increasePenWidth);
+    connect(btnShapeWidthDown, &QPushButton::clicked, this, &ScreenshotWidget::decreasePenWidth);
+}
+
+void ScreenshotWidget::handleNoneMode(const QPoint& clickPos)
+{
+    // Check if we clicked on any existing text to edit it
+    for (int i = texts.size() - 1; i >= 0; i--) {
+        if (texts[i].rect.contains(clickPos)) {
+            editExistingText(i);
+            return;
+        }
+    }
+}
+
+void ScreenshotWidget::handleTextModeClick(const QPoint& clickPos)
+{
+    // If we are already editing text, finish it
+    if (isTextInputActive) {
+        onTextInputFinished();
+        return;
+    }
+
+    // Check if we clicked on existing text
+    for (int i = texts.size() - 1; i >= 0; i--) {
+        if (texts[i].rect.contains(clickPos)) {
+            editExistingText(i);
+            return;
+        }
+    }
+
+    // Start new text input
+    textInputPosition = clickPos;
+    if (textInput) {
+        textInput->move(textInputPosition);
+        textInput->clear();
+        textInput->resize(100, currentFontSize + 10); // Initial size
+        textInput->show();
+        textInput->setFocus();
+        isTextInputActive = true;
+        
+        // Show font toolbar
+        if (fontToolbar) {
+            updateFontToolbarPosition();
+            fontToolbar->show();
+            fontToolbar->raise();
+        }
+    }
+}
+
+void ScreenshotWidget::updateTextInputSize()
+{
+    if (!textInput) return;
+    
+    QFontMetrics fm(textInput->font());
+    QString text = textInput->text();
+    if (text.isEmpty()) text = " "; // Ensure minimum size
+    
+    int width = fm.horizontalAdvance(text) + 20;
+    int height = fm.height() + 10;
+    
+    textInput->resize(width, height);
+}
+
+void ScreenshotWidget::updateTextInputStyle()
+{
+    if (!textInput) return;
+    
+    textInput->setFont(currentTextFont);
+    QPalette palette = textInput->palette();
+    palette.setColor(QPalette::Text, currentTextColor);
+    textInput->setPalette(palette);
+    
+    updateTextInputSize();
+}
+
+void ScreenshotWidget::updateFontToolbarPosition()
+{
+    if (!fontToolbar || !textInput) return;
+    
+    int x = textInput->x();
+    int y = textInput->y() + textInput->height() + 5;
+    
+    if (y + fontToolbar->height() > height()) {
+        y = textInput->y() - fontToolbar->height() - 5;
+    }
+    
+    fontToolbar->move(x, y);
 }
 
