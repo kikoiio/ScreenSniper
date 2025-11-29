@@ -111,7 +111,9 @@ private slots:
     void onFontSizeInputChanged();
 
 private:
-
+    //越界判断相关：
+    //水印相关
+    void showWatermarkDialog();
     //高斯模糊相关函数：
     void increaseBlurStrength();
     void decreaseBlurStrength();
@@ -127,7 +129,8 @@ private:
         Text,
         Pen,
         Mosaic,
-        Blur
+        Blur,
+        Watermark
     }; DrawMode currentDrawMode;
     QList<DrawMode> effectTypes;        // 存储效果类型
     void increaseEffectStrength();
@@ -220,6 +223,7 @@ private:
     QPushButton* btnMosaic;  // 马赛克按钮
     QPushButton* btnBlur;//高斯模糊按钮
     QPushButton *btnPin; //Pin到桌面按钮
+    QPushButton *btnWatermark;//水印按钮
 
     // 尺寸显示标签
     QLabel* sizeLabel;
@@ -320,6 +324,9 @@ private:
     QPoint drawEndPoint;
 
     // 当前鼠标下的窗口矩形（自动吸附用）
+    //QRect currentWindowRect;
+    //水印相关;
+    QString watermarkText;
     //QRect currentWindowRect;
 };
 
