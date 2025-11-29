@@ -6,6 +6,15 @@ win32 {
 }
 macx {
     LIBS += -framework CoreGraphics
+    
+    # OpenCV configuration for macOS (Homebrew)
+    INCLUDEPATH += /opt/homebrew/opt/opencv/include/opencv4
+    LIBS += -L/opt/homebrew/opt/opencv/lib \
+            -lopencv_core \
+            -lopencv_imgproc \
+            -lopencv_highgui \
+            -lopencv_imgcodecs \
+            -lopencv_videoio
 }
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -53,30 +62,7 @@ win32 {
     }
 }
 
-macx {
-    # macOS 配置 - 请根据您的实际路径修改
-    # 通常使用 Homebrew 安装的 OpenCV 路径
-    INCLUDEPATH += /usr/local/include/opencv4
-    DEPENDPATH += /usr/local/include/opencv4
 
-    # 显式添加 opencv2 子目录
-    INCLUDEPATH += /usr/local/include/opencv4/opencv2
-    DEPENDPATH += /usr/local/include/opencv4/opencv2
-
-    LIBS += -framework CoreGraphics
-    LIBS += -L/usr/local/lib
-
-    CONFIG(debug, debug|release) {
-        LIBS += -lopencv_world4120d
-        DEFINES += OPENCV_DEBUG
-    } else {
-        LIBS += -lopencv_world4120
-    }
-
-    # 或者如果使用 pkg-config（推荐）
-    # CONFIG += link_pkgconfig
-    # PKGCONFIG += opencv4
-}
 
 
 

@@ -1134,9 +1134,11 @@ void ScreenshotWidget::mouseMoveEvent(QMouseEvent* event)
                 captureWindow(event->globalPosition().toPoint());
             #endif
             //获取窗口大小
+            #ifdef Q_OS_WIN
             if (m_hoverWindow.hwnd) {
                 selectedRect = getAccurateWindowRect(m_hoverWindow.hwnd);
             }
+            #endif
         }else{
             //判断鼠标是否处于调节区域
             mouseIsAdjust(event->pos());
@@ -2482,7 +2484,7 @@ QList<WindowInfo> ScreenshotWidget::enumAllValidWindows()
             else continue;
 
             WindowInfo info;
-            info.title = "Window"; // Dummy title for isValid()
+            // info.title = "Window"; // Dummy title for isValid()
 
             // CoreGraphics 使用以屏幕左下角为原点的坐标系，Qt 使用左上角为原点，需翻转 Y 轴。
             CGRect mainBounds = CGDisplayBounds(CGMainDisplayID());
@@ -2647,6 +2649,7 @@ BOOL CALLBACK ScreenshotWidget::EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     }
     return TRUE;
 }
+#endif
 void ScreenshotWidget::showWatermarkDialog()//嵌入水印
 {
     QDialog dlg(this);
@@ -2695,6 +2698,7 @@ void ScreenshotWidget::showWatermarkDialog()//嵌入水印
         QMessageBox::information(this, "成功", "隐水印参数设置成功！\n保存截图时将自动嵌入水印。");
     }
 }
+#ifdef Q_OS_WIN
 BOOL CALLBACK ScreenshotWidget::EnumChildProc(HWND childHwnd, LPARAM lParam) {
     bool* pHasValid = reinterpret_cast<bool*>(lParam);
     if (IsWindowVisible(childHwnd)) {
