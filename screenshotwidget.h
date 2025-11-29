@@ -84,6 +84,11 @@ public:
     void startCapture();
     void startCaptureFullScreen(); // 直接截取全屏并显示工具栏
 
+private slots:
+#ifdef Q_OS_MAC
+    void performOCR();
+#endif
+
 signals:
     void screenshotTaken();
     void screenshotCancelled();
@@ -226,6 +231,9 @@ private:
     QPushButton *btnBlur;      // 高斯模糊按钮
     QPushButton *btnPin;       // Pin到桌面按钮
     QPushButton *btnWatermark; // 水印按钮
+#ifdef Q_OS_MAC
+    QPushButton *btnOCR; // OCR 按钮
+#endif
 
     // 尺寸显示标签
     QLabel *sizeLabel;

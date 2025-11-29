@@ -6,6 +6,11 @@ win32 {
 }
 macx {
     LIBS += -framework CoreGraphics
+    LIBS += -framework Vision
+    LIBS += -framework AppKit
+    
+    OBJECTIVE_SOURCES += macocr.mm
+    HEADERS += macocr.h
     
     # OpenCV configuration for macOS (Homebrew)
     INCLUDEPATH += /opt/homebrew/opt/opencv/include/opencv4

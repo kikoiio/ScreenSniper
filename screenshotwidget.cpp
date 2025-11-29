@@ -23,6 +23,9 @@
 #include <QColorDialog>
 #include <opencv2/opencv.hpp>
 #include "watermark_robust.h"
+#ifdef Q_OS_MAC
+#include "macocr.h"
+#endif
 
 #include <QSpinBox>
 #include <QDoubleSpinBox>
@@ -120,6 +123,9 @@ void ScreenshotWidget::setupToolbar()
     btnMosaic = new QPushButton("马赛克", toolbar);
     btnBlur = new QPushButton("高斯模糊", toolbar);    // 新增模糊按钮
     btnWatermark = new QPushButton("隐水印", toolbar); // 新增隐水印
+#ifdef Q_OS_MAC
+    btnOCR = new QPushButton("OCR", toolbar); // 新增 OCR 按钮
+#endif
     // 操作按钮
     btnSave = new QPushButton("保存", toolbar);
     btnCopy = new QPushButton("复制", toolbar);
@@ -133,6 +139,9 @@ void ScreenshotWidget::setupToolbar()
     layout->addWidget(btnMosaic);    // 马赛克按钮
     layout->addWidget(btnBlur);      // 高斯模糊按钮
     layout->addWidget(btnWatermark); // 水印按钮
+#ifdef Q_OS_MAC
+    layout->addWidget(btnOCR); // OCR 按钮
+#endif
     layout->addSpacing(10);
     layout->addWidget(btnSave);
     layout->addWidget(btnCopy);
@@ -167,6 +176,9 @@ void ScreenshotWidget::setupToolbar()
     connect(btnCopy, &QPushButton::clicked, this, &ScreenshotWidget::copyToClipboard);
     connect(btnPin, &QPushButton::clicked, this, &ScreenshotWidget::pinToDesktop);
     connect(btnCancel, &QPushButton::clicked, this, &ScreenshotWidget::cancelCapture);
+#ifdef Q_OS_MAC
+    connect(btnOCR, &QPushButton::clicked, this, &ScreenshotWidget::performOCR);
+#endif
 
     connect(btnShapes, &QPushButton::clicked, this, [this]()
             { toggleSubToolbar(shapesToolbar); });
@@ -2441,12 +2453,7 @@ void ScreenshotWidget::editExistingText(int textIndex)
         textInput->selectAll();
         isTextInputActive = true;
 
-        // 使用原来的字体设置
-        currentTextColor = text.color;
-        currentTextFont = text.font;
-        currentFontSize = text.fontSize;
-
-        // 确保fontToolbar存在
+        // 显示字体工具栏
         if (fontToolbar)
         {
             updateFontToolbar();
@@ -3125,7 +3132,7 @@ void ScreenshotWidget::handleTextModeClick(const QPoint &clickPos)
         textInput->setFocus();
         isTextInputActive = true;
 
-        // Show font toolbar
+        // 显示字体工具栏
         if (fontToolbar)
         {
             updateFontToolbarPosition();
@@ -3247,3 +3254,30 @@ void ScreenshotWidget::toggleSubToolbar(QWidget *targetToolbar)
         }
     }
 }
+
+#ifdef Q_OS_MAC
+void ScreenshotWidget::performOCR()
+{
+    if (selectedRect.isNull())
+    {
+        return;
+    }
+
+    // 获取当前截图（包含绘制的内容）
+    QPixmap capture = this->grab(selectedRect);
+
+    // 调用 OCR
+    QString text = MacOCR::recognizeText(capture);
+
+    if (!text.isEmpty())
+    {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(text);
+        QMessageBox::information(this, "OCR 完成", "识别到的文字已复制到剪贴板：\n\n" + text);
+    }
+    else
+    {
+        QMessageBox::warning(this, "OCR 失败", "未能识别到文字，或者当前系统不支持 OCR。");
+    }
+}
+#endif
