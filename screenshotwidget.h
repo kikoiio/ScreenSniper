@@ -147,6 +147,8 @@ private:
     void updateToolbarPosition();
     void toggleSubToolbar(QWidget *targetToolbar); // 统一管理子工具栏显示
     void updatePreviewCanvas(QLabel *canvas);
+    QPushButton *createColorButton(QWidget *parent, const QColor &color); // 创建统一的颜色按钮
+    void updateColorButton(QPushButton *button, const QColor &color);     // 更新颜色按钮样式
 
     void saveScreenshot();
     void copyToClipboard();
