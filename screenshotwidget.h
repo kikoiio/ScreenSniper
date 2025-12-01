@@ -181,10 +181,11 @@ private:
     // 回调函数
     static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
     static BOOL CALLBACK EnumChildProc(HWND childHwnd, LPARAM lParam);
-    // 精准获取窗口边界
-    QRect getAccurateWindowRect(HWND hwnd);
 
 #endif
+
+    // 精准获取窗口边界（跨平台）
+    QRect getAccurateWindowRect(const WindowInfo& window);
 
     // 画笔相关函数
     void setupPenToolbar();

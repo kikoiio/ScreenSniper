@@ -1179,12 +1179,10 @@ void ScreenshotWidget::mouseMoveEvent(QMouseEvent *event)
             captureWindow(event->pos());
 
             // 获取窗口大小
-#ifdef Q_OS_WIN
-            if (m_hoverWindow.hwnd)
+            if (m_hoverWindow.isValid())
             {
-                selectedRect = getAccurateWindowRect(m_hoverWindow.hwnd);
+                selectedRect = getAccurateWindowRect(m_hoverWindow);
             }
-#endif
         }
         else
         {
@@ -2722,14 +2720,16 @@ BOOL CALLBACK ScreenshotWidget::EnumChildProc(HWND childHwnd, LPARAM lParam)
     }
     return TRUE;
 }
+#endif
 
-// 精准获取窗口边界
-QRect ScreenshotWidget::getAccurateWindowRect(HWND hwnd)
+// 精准获取窗口边界（跨平台）
+QRect ScreenshotWidget::getAccurateWindowRect(const WindowInfo& window)
 {
-    // 先尝试读取Windows DWM扩展边框
+#ifdef Q_OS_WIN
+    // Windows: 先尝试读取DWM扩展边框
     RECT extendedFrameRect;
     HRESULT hr = DwmGetWindowAttribute(
-        hwnd,
+        window.hwnd,
         DWMWA_EXTENDED_FRAME_BOUNDS,
         &extendedFrameRect,
         sizeof(extendedFrameRect));
@@ -2743,15 +2743,18 @@ QRect ScreenshotWidget::getAccurateWindowRect(HWND hwnd)
             (extendedFrameRect.bottom - extendedFrameRect.top) / devicePixelRatio);
     }
 
-    // 备用方案：获取普通窗口矩形并适配DPI
+    // Windows 备用方案：获取普通窗口矩形并适配DPI
     RECT rect;
-    GetWindowRect(hwnd, &rect);
+    GetWindowRect(window.hwnd, &rect);
     return QRect(rect.left / devicePixelRatio,
                  rect.top / devicePixelRatio,
                  (rect.right - rect.left) / devicePixelRatio,
                  (rect.bottom - rect.top) / devicePixelRatio);
-}
+#else
+    // macOS: 直接返回窗口矩形（已在枚举时处理好坐标系转换和DPI）
+    return window.rect;
 #endif
+}
 void ScreenshotWidget::showWatermarkDialog() // 嵌入水印
 {
     QDialog dlg(this);
