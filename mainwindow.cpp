@@ -119,6 +119,7 @@ void MainWindow::onCaptureScreen()
 
     // 每次都重新创建截图窗口
     ScreenshotWidget *widget = new ScreenshotWidget();
+    widget->setMainWindow(this);
     // 结束时会卡一下，看不到写的信息，所以直接注释掉了，后续可以加类似飞书的消息提示
     //    connect(widget, &ScreenshotWidget::screenshotTaken, this, [this]()
     //            {
@@ -140,6 +141,7 @@ void MainWindow::onCaptureArea()
 
     // 每次都重新创建截图窗口
     ScreenshotWidget *widget = new ScreenshotWidget();
+    widget->setMainWindow(this);
     // 结束时会卡一下，看不到写的信息，所以直接注释掉了，后续可以加类似飞书的消息提示
     //    connect(widget, &ScreenshotWidget::screenshotTaken, this, [this]()
     //            {

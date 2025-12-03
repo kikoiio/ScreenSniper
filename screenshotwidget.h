@@ -84,6 +84,10 @@ public:
     void startCapture();
     void startCaptureFullScreen(); // 直接截取全屏并显示工具栏
 
+    // 国际化支持
+    void setMainWindow(QWidget *mainWin) { mainWindow = mainWin; }
+    QString getText(const QString &key, const QString &defaultText = "") const;
+
 private slots:
     void performOCR();
 
@@ -225,18 +229,18 @@ private:
     QPushButton *btnSave;
     QPushButton *btnCopy;
     QPushButton *btnCancel;
-    QPushButton *btnRect;      // 矩形工具
-    QPushButton *btnEllipse;   // 椭圆工具
-    QPushButton *btnArrow;     // 箭头工具
-    QPushButton *btnText;      // 文字工具
-    QPushButton *btnPen;       // 画笔工具
-    QPushButton *btnMosaic;    // 马赛克按钮
-    QPushButton *btnBlur;      // 高斯模糊按钮
-    QPushButton *btnPin;       // Pin到桌面按钮
+    QPushButton *btnRect;    // 矩形工具
+    QPushButton *btnEllipse; // 椭圆工具
+    QPushButton *btnArrow;   // 箭头工具
+    QPushButton *btnText;    // 文字工具
+    QPushButton *btnPen;     // 画笔工具
+    QPushButton *btnMosaic;  // 马赛克按钮
+    QPushButton *btnBlur;    // 高斯模糊按钮
+    QPushButton *btnPin;     // Pin到桌面按钮
 #ifndef NO_OPENCV
     QPushButton *btnWatermark; // 水印按钮
 #endif
-    QPushButton *btnOCR;       // OCR 按钮
+    QPushButton *btnOCR; // OCR 按钮
 
     // 尺寸显示标签
     QLabel *sizeLabel;
@@ -349,6 +353,9 @@ private:
     QString watermarkText;
 #endif
     // QRect currentWindowRect;
+
+    // 国际化相关
+    QWidget *mainWindow;
 };
 
 #endif // SCREENSHOTWIDGET_H

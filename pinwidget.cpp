@@ -6,9 +6,11 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QMetaObject>
+#include <QMetaMethod>
 
 PinWidget::PinWidget(const QPixmap &pixmap, QWidget *parent)
-    : QWidget(parent), m_sourcePixmap(pixmap), m_scale(1.0)
+    : QWidget(parent), m_sourcePixmap(pixmap), m_scale(1.0), mainWindow(nullptr)
 {
     // 【核心设置】
     // FramelessWindowHint: 去掉标题栏和边框
@@ -21,6 +23,26 @@ PinWidget::PinWidget(const QPixmap &pixmap, QWidget *parent)
 
     // 设置窗口初始大小为图片大小
     resize(m_sourcePixmap.size());
+}
+
+QString PinWidget::getText(const QString &key, const QString &defaultText) const
+{
+    if (mainWindow)
+    {
+        const QMetaObject *metaObj = mainWindow->metaObject();
+        int methodIndex = metaObj->indexOfMethod("getText(QString,QString)");
+        if (methodIndex != -1)
+        {
+            QString result;
+            QMetaMethod method = metaObj->method(methodIndex);
+            method.invoke(mainWindow, Qt::DirectConnection,
+                          Q_RETURN_ARG(QString, result),
+                          Q_ARG(QString, key),
+                          Q_ARG(QString, defaultText));
+            return result;
+        }
+    }
+    return defaultText;
 }
 
 void PinWidget::paintEvent(QPaintEvent *event)
@@ -102,10 +124,10 @@ void PinWidget::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
 
     // 添加菜单项
-    QAction *copyAction = menu.addAction("复制到剪切板");
-    QAction *saveAction = menu.addAction("另存为...");
+    QAction *copyAction = menu.addAction(getText("pin_copy", "复制到剪切板"));
+    QAction *saveAction = menu.addAction(getText("pin_save", "另存为..."));
     menu.addSeparator(); // 分隔线
-    QAction *closeAction = menu.addAction("关闭贴图");
+    QAction *closeAction = menu.addAction(getText("pin_close", "关闭贴图"));
 
     // 显示菜单并等待用户点击
     QAction *selectedItem = menu.exec(event->globalPos());
@@ -122,7 +144,7 @@ void PinWidget::contextMenuEvent(QContextMenuEvent *event)
     else if (selectedItem == saveAction)
     {
         // 打开保存对话框
-        QString fileName = QFileDialog::getSaveFileName(this, "保存图片",
+        QString fileName = QFileDialog::getSaveFileName(this, getText("save_image", "保存图片"),
                                                         "screenshot_" + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".png",
                                                         "Images (*.png *.jpg)");
         if (!fileName.isEmpty())

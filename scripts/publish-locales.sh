@@ -9,7 +9,7 @@ echo "📦 ScreenSniper Locales 发布工具"
 echo "================================"
 echo ""
 
-cd locales-package
+cd node_modules/@screensniper/locales
 
 # 检查是否登录
 echo "🔍 检查 npm 登录状态..."

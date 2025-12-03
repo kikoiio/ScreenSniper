@@ -21,6 +21,8 @@
 #include <QLineEdit>
 #include <QFontDialog>
 #include <QColorDialog>
+#include <QMetaObject>
+#include <QMetaMethod>
 #ifndef NO_OPENCV
 #include <opencv2/opencv.hpp>
 #include "watermark_robust.h"
@@ -69,7 +71,8 @@ ScreenshotWidget::ScreenshotWidget(QWidget *parent)
       currentFontSize(18),
       editingTextIndex(-1),
       currentDrawMode(None),
-      isDrawing(false)
+      isDrawing(false),
+      mainWindow(nullptr)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -99,6 +102,33 @@ ScreenshotWidget::~ScreenshotWidget()
 {
 }
 
+QString ScreenshotWidget::getText(const QString &key, const QString &defaultText) const
+{
+    if (mainWindow)
+    {
+        // 使用 MainWindow 的 getText 方法
+        QMetaObject::invokeMethod(mainWindow, "getText",
+                                  Qt::DirectConnection,
+                                  Q_RETURN_ARG(QString, const_cast<QString &>(const_cast<ScreenshotWidget *>(this)->watermarkText)),
+                                  Q_ARG(QString, key),
+                                  Q_ARG(QString, defaultText));
+        // 更简单的方式：直接调用
+        const QMetaObject *metaObj = mainWindow->metaObject();
+        int methodIndex = metaObj->indexOfMethod("getText(QString,QString)");
+        if (methodIndex != -1)
+        {
+            QString result;
+            QMetaMethod method = metaObj->method(methodIndex);
+            method.invoke(mainWindow, Qt::DirectConnection,
+                          Q_RETURN_ARG(QString, result),
+                          Q_ARG(QString, key),
+                          Q_ARG(QString, defaultText));
+            return result;
+        }
+    }
+    return defaultText;
+}
+
 void ScreenshotWidget::setupToolbar()
 {
     // 主工具栏设置
@@ -120,38 +150,38 @@ void ScreenshotWidget::setupToolbar()
     btnShapes = new QPushButton(toolbar);
     btnShapes->setIcon(QIcon(":/icons/icons/shapes.svg"));
     btnShapes->setIconSize(QSize(20, 20));
-    btnShapes->setToolTip("形状");
+    btnShapes->setToolTip(getText("tooltip_shapes", "形状"));
     btnShapes->setFixedSize(36, 36);
 
     btnText = new QPushButton(toolbar);
     btnText->setIcon(QIcon(":/icons/icons/text.svg"));
     btnText->setIconSize(QSize(20, 20));
-    btnText->setToolTip("文字");
+    btnText->setToolTip(getText("tooltip_text", "文字"));
     btnText->setFixedSize(36, 36);
 
     btnPen = new QPushButton(toolbar);
     btnPen->setIcon(QIcon(":/icons/icons/pen.svg"));
     btnPen->setIconSize(QSize(20, 20));
-    btnPen->setToolTip("画笔");
+    btnPen->setToolTip(getText("tooltip_pen", "画笔"));
     btnPen->setFixedSize(36, 36);
 
     btnMosaic = new QPushButton(toolbar);
     btnMosaic->setIcon(QIcon(":/icons/icons/mosaic.svg"));
     btnMosaic->setIconSize(QSize(20, 20));
-    btnMosaic->setToolTip("马赛克");
+    btnMosaic->setToolTip(getText("tooltip_mosaic", "马赛克"));
     btnMosaic->setFixedSize(36, 36);
 
     btnBlur = new QPushButton(toolbar);
     btnBlur->setIcon(QIcon(":/icons/icons/blur.svg"));
     btnBlur->setIconSize(QSize(20, 20));
-    btnBlur->setToolTip("高斯模糊");
+    btnBlur->setToolTip(getText("tooltip_blur", "高斯模糊"));
     btnBlur->setFixedSize(36, 36);
 
 #ifndef NO_OPENCV
     btnWatermark = new QPushButton(toolbar);
     btnWatermark->setIcon(QIcon(":/icons/icons/watermark.svg"));
     btnWatermark->setIconSize(QSize(20, 20));
-    btnWatermark->setToolTip("隐水印");
+    btnWatermark->setToolTip(getText("tooltip_watermark", "隐水印"));
     btnWatermark->setFixedSize(36, 36);
 #endif
 
@@ -165,13 +195,13 @@ void ScreenshotWidget::setupToolbar()
     btnSave = new QPushButton(toolbar);
     btnSave->setIcon(QIcon(":/icons/icons/save.svg"));
     btnSave->setIconSize(QSize(20, 20));
-    btnSave->setToolTip("保存");
+    btnSave->setToolTip(getText("tooltip_save", "保存"));
     btnSave->setFixedSize(36, 36);
 
     btnCopy = new QPushButton(toolbar);
     btnCopy->setIcon(QIcon(":/icons/icons/copy.svg"));
     btnCopy->setIconSize(QSize(20, 20));
-    btnCopy->setToolTip("复制");
+    btnCopy->setToolTip(getText("tooltip_copy", "复制"));
     btnCopy->setFixedSize(36, 36);
 
     btnPin = new QPushButton(toolbar);
@@ -183,19 +213,19 @@ void ScreenshotWidget::setupToolbar()
     btnCancel = new QPushButton(toolbar);
     btnCancel->setIcon(QIcon(":/icons/icons/cancel.svg"));
     btnCancel->setIconSize(QSize(20, 20));
-    btnCancel->setToolTip("取消");
+    btnCancel->setToolTip(getText("tooltip_cancel", "取消"));
     btnCancel->setFixedSize(36, 36);
 
     layout->addWidget(btnShapes);
     layout->addWidget(btnText);
     layout->addWidget(btnPen);
 
-    layout->addWidget(btnMosaic);    // 马赛克按钮
-    layout->addWidget(btnBlur);      // 高斯模糊按钮
+    layout->addWidget(btnMosaic); // 马赛克按钮
+    layout->addWidget(btnBlur);   // 高斯模糊按钮
 #ifndef NO_OPENCV
     layout->addWidget(btnWatermark); // 水印按钮
 #endif
-    layout->addWidget(btnOCR);       // OCR 按钮
+    layout->addWidget(btnOCR); // OCR 按钮
 
     layout->addSpacing(10);
     layout->addWidget(btnSave);
@@ -218,10 +248,10 @@ void ScreenshotWidget::setupToolbar()
     EffectLayout->setContentsMargins(16, 8, 16, 8);
 
     btnStrengthDown = new QPushButton("-", EffectToolbar);
-    strengthLabel = new QLabel("20(强）", EffectToolbar);
+    strengthLabel = new QLabel("20(" + getText("strength_strong", "强") + ")", EffectToolbar);
     btnStrengthUp = new QPushButton("+", EffectToolbar);
 
-    EffectLayout->addWidget(new QLabel("模糊强度:", EffectToolbar));
+    EffectLayout->addWidget(new QLabel(getText("blur_strength", "模糊强度:"), EffectToolbar));
     EffectLayout->addWidget(btnStrengthDown);
     EffectLayout->addWidget(strengthLabel);
     EffectLayout->addWidget(btnStrengthUp);
@@ -296,7 +326,7 @@ QPushButton *ScreenshotWidget::createColorButton(QWidget *parent, const QColor &
 {
     QPushButton *button = new QPushButton(parent);
     button->setObjectName("colorBtn");
-    button->setToolTip("选择颜色");
+    button->setToolTip(getText("tooltip_color", "选择颜色"));
     button->setFixedSize(40, 40);
     updateColorButton(button, color);
     return button;
@@ -370,15 +400,15 @@ void ScreenshotWidget::updateStrengthLabel()
     QString strengthText;
     if (currentEffectStrength <= 8)
     {
-        strengthText = "弱";
+        strengthText = getText("strength_weak", "弱");
     }
     else if (currentEffectStrength <= 20)
     {
-        strengthText = "中";
+        strengthText = getText("strength_medium", "中");
     }
     else
     {
-        strengthText = "强";
+        strengthText = getText("strength_strong", "强");
     }
     strengthLabel->setText(QString("%1 (%2)").arg(currentEffectStrength).arg(strengthText));
 }
@@ -1702,7 +1732,7 @@ void ScreenshotWidget::saveScreenshot()
 #ifndef NO_OPENCV
     if (!watermarkText.isEmpty())
     {
-        qDebug() << "开始嵌入水印:" << watermarkText;
+        qDebug() << getText("watermark_embed_start", "开始嵌入水印:") << watermarkText;
 
         // 将 QPixmap 转换为 cv::Mat
         QImage imageWithAnnotations = croppedPixmap.toImage();
@@ -1731,7 +1761,7 @@ void ScreenshotWidget::saveScreenshot()
 
         if (watermarkSuccess)
         {
-            qDebug() << "水印嵌入成功";
+            qDebug() << getText("watermark_embed_success", "水印嵌入成功");
 
             // 将处理后的图像转换回 QImage
             cv::Mat cvImageRGBA;
@@ -1748,13 +1778,13 @@ void ScreenshotWidget::saveScreenshot()
         }
         else
         {
-            qDebug() << "水印嵌入失败";
-            QMessageBox::warning(this, "警告", "水印嵌入失败，将保存无水印图片");
+            qDebug() << getText("watermark_embed_failed", "水印嵌入失败");
+            QMessageBox::warning(this, getText("watermark_success_title", "警告"), getText("watermark_embed_error", "水印嵌入失败，将保存无水印图片"));
         }
     }
     else
     {
-        qDebug() << "未设置水印内容";
+        qDebug() << getText("watermark_not_set", "未设置水印内容");
     }
 #endif
     // 获取默认保存路径
@@ -1764,9 +1794,9 @@ void ScreenshotWidget::saveScreenshot()
 
     // 打开保存对话框
     QString fileName = QFileDialog::getSaveFileName(this,
-                                                    "保存截图",
+                                                    getText("save_screenshot", "保存截图"),
                                                     defaultFileName,
-                                                    "PNG图片 (*.png);;JPEG图片 (*.jpg);;所有文件 (*.*)");
+                                                    getText("file_filter", "PNG图片 (*.png);;JPEG图片 (*.jpg);;所有文件 (*.*)"));
 
     if (!fileName.isEmpty())
     {
@@ -1965,7 +1995,7 @@ void ScreenshotWidget::setupTextInput()
         "QLineEdit{ background-color:rgba(255,255,255,240);color: black; "
         "border: 2px solid #0096FF; border-radius: 3px;padding: 5px;font-size: 14px; }"
         "QLineEdit:focus{border-color:#FF5500;}");
-    textInput->setPlaceholderText("输入文字...");
+    textInput->setPlaceholderText(getText("text_placeholder", "输入文字..."));
     textInput->hide();
 
     // 连接信号
@@ -2100,9 +2130,9 @@ void ScreenshotWidget::setTextToolbar()
     btnFontSizeUp = new QPushButton("+", fontToolbar);
 
     // 字体选择按钮
-    btnFontFamily = new QPushButton("字体", fontToolbar);
+    btnFontFamily = new QPushButton(getText("font_button", "字体"), fontToolbar);
 
-    fontLayout->addWidget(new QLabel("文字设置：", fontToolbar));
+    fontLayout->addWidget(new QLabel(getText("text_settings", "文字设置："), fontToolbar));
     fontLayout->addWidget(btnFontColor);
     fontLayout->addWidget(btnFontSizeDown);
     fontLayout->addWidget(fontSizeInput);
@@ -2163,7 +2193,7 @@ void ScreenshotWidget::updateFontToolbar()
 // 字体颜色选择
 void ScreenshotWidget::onTextColorClicked()
 {
-    QColor color = QColorDialog::getColor(currentTextColor, this, "选择文字颜色");
+    QColor color = QColorDialog::getColor(currentTextColor, this, getText("select_text_color", "选择文字颜色"));
     if (color.isValid())
     {
         currentTextColor = color;
@@ -2236,7 +2266,7 @@ void ScreenshotWidget::decreaseFontSize()
 void ScreenshotWidget::onFontFamilyClicked()
 {
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, currentTextFont, this, "选择字体");
+    QFont font = QFontDialog::getFont(&ok, currentTextFont, this, getText("select_font", "选择字体"));
     if (ok)
     {
         currentTextFont = font;
@@ -2284,7 +2314,7 @@ void ScreenshotWidget::setupPenToolbar()
     penWidthLabel->setAlignment(Qt::AlignCenter);
 
     // 添加预览标签
-    QLabel *previewLabel = new QLabel("预览:", penToolbar);
+    QLabel *previewLabel = new QLabel(getText("preview", "预览:"), penToolbar);
 
     // 添加预览画布
     QLabel *previewCanvas = new QLabel(penToolbar);
@@ -2296,7 +2326,7 @@ void ScreenshotWidget::setupPenToolbar()
     penLayout->addSpacing(10);
     penLayout->addWidget(btnColorPicker);
     penLayout->addSpacing(5);
-    penLayout->addWidget(new QLabel("粗细：", penToolbar));
+    penLayout->addWidget(new QLabel(getText("thickness", "粗细："), penToolbar));
     penLayout->addWidget(btnPenWidthDown);
     penLayout->addWidget(penWidthLabel);
     penLayout->addWidget(btnPenWidthUp);
@@ -2340,12 +2370,12 @@ void ScreenshotWidget::updatePreviewCanvas(QLabel *canvas)
 void ScreenshotWidget::onPenButtonClicked()
 {
     currentDrawMode = DrawMode::Pen;
-    qDebug() << "画笔模式激活";
+    qDebug() << getText("pen_mode_activated", "画笔模式激活");
 }
 
 void ScreenshotWidget::onColorPickerClicked()
 {
-    QColor color = QColorDialog::getColor(currentPenColor, this, "选择画笔颜色");
+    QColor color = QColorDialog::getColor(currentPenColor, this, getText("select_pen_color", "选择画笔颜色"));
     if (color.isValid())
     {
         currentPenColor = color;
@@ -2518,6 +2548,7 @@ void ScreenshotWidget::pinToDesktop()
 
     // 3. 创建 Pin 窗口
     PinWidget *pin = new PinWidget(finalPixmap);
+    pin->setMainWindow(mainWindow);
 
     // 4. 让贴图出现在选区的原位置
     QPoint globalPos = this->mapToGlobal(selectedRect.topLeft());
@@ -2761,30 +2792,30 @@ QRect ScreenshotWidget::getAccurateWindowRect(const WindowInfo &window)
 void ScreenshotWidget::showWatermarkDialog() // 嵌入水印
 {
     QDialog dlg(this);
-    dlg.setWindowTitle("设置隐水印参数");
+    dlg.setWindowTitle(getText("watermark_dialog_title", "设置隐水印参数"));
     dlg.setModal(true);
     dlg.resize(380, 180); // 高度减小，因为移除了参数设置
 
     QVBoxLayout *layout = new QVBoxLayout(&dlg);
 
     // 输入文本
-    QLabel *note = new QLabel("水印内容最多 15 字符，不足自动补 '0' ");
+    QLabel *note = new QLabel(getText("watermark_note", "水印内容最多 15 字符，不足自动补 '0' "));
     layout->addWidget(note);
 
     QLineEdit *editText = new QLineEdit();
-    editText->setPlaceholderText("请输入水印内容（≤15字符）");
+    editText->setPlaceholderText(getText("watermark_placeholder", "请输入水印内容（≤15字符）"));
     editText->setMaxLength(15);
     layout->addWidget(editText);
 
     // 显示固定参数信息
-    QLabel *paramInfo = new QLabel("固定参数：量化步长 Δ=16.0f，冗余强度 REPEAT=11");
+    QLabel *paramInfo = new QLabel(getText("watermark_param_info", "固定参数：量化步长 Δ=16.0f，冗余强度 REPEAT=11"));
     paramInfo->setStyleSheet("color: gray; font-size: 10pt;");
     layout->addWidget(paramInfo);
 
     // 按钮栏
     QHBoxLayout *btnRow = new QHBoxLayout();
-    QPushButton *btnOk = new QPushButton("确定");
-    QPushButton *btnCancel = new QPushButton("取消");
+    QPushButton *btnOk = new QPushButton(getText("btn_ok", "确定"));
+    QPushButton *btnCancel = new QPushButton(getText("btn_cancel", "取消"));
     btnRow->addWidget(btnOk);
     btnRow->addWidget(btnCancel);
     layout->addLayout(btnRow);
@@ -2803,7 +2834,7 @@ void ScreenshotWidget::showWatermarkDialog() // 嵌入水印
 
     if (dlg.exec() == QDialog::Accepted)
     {
-        QMessageBox::information(this, "成功", "隐水印参数设置成功！\n保存截图时将自动嵌入水印。");
+        QMessageBox::information(this, getText("watermark_success_title", "成功"), getText("watermark_success_msg", "隐水印参数设置成功！\n保存截图时将自动嵌入水印。"));
     }
 }
 #endif
@@ -2960,21 +2991,21 @@ void ScreenshotWidget::setupShapesToolbar()
     btnRect = new QPushButton(shapesToolbar);
     btnRect->setIcon(QIcon(":/icons/icons/rectangle.svg"));
     btnRect->setIconSize(QSize(20, 20));
-    btnRect->setToolTip("矩形");
+    btnRect->setToolTip(getText("tooltip_rect", "矩形"));
     btnRect->setFixedSize(36, 36);
     btnRect->setCheckable(true);
 
     btnEllipse = new QPushButton(shapesToolbar);
     btnEllipse->setIcon(QIcon(":/icons/icons/ellipse.svg"));
     btnEllipse->setIconSize(QSize(20, 20));
-    btnEllipse->setToolTip("椭圆");
+    btnEllipse->setToolTip(getText("tooltip_ellipse", "椭圆"));
     btnEllipse->setFixedSize(36, 36);
     btnEllipse->setCheckable(true);
 
     btnArrow = new QPushButton(shapesToolbar);
     btnArrow->setIcon(QIcon(":/icons/icons/arrow.svg"));
     btnArrow->setIconSize(QSize(20, 20));
-    btnArrow->setToolTip("箭头");
+    btnArrow->setToolTip(getText("tooltip_arrow", "箭头"));
     btnArrow->setFixedSize(36, 36);
     btnArrow->setCheckable(true);
 
@@ -2994,7 +3025,7 @@ void ScreenshotWidget::setupShapesToolbar()
     layout->addSpacing(10);
     layout->addWidget(btnShapeColor);
     layout->addSpacing(5);
-    layout->addWidget(new QLabel("粗细:", shapesToolbar));
+    layout->addWidget(new QLabel(getText("thickness", "粗细:"), shapesToolbar));
     layout->addWidget(btnShapeWidthDown);
     layout->addWidget(shapeWidthLabel);
     layout->addWidget(btnShapeWidthUp);
@@ -3280,9 +3311,8 @@ void ScreenshotWidget::performOCR()
     // Windows/Linux 未配置 Tesseract 的情况
     if (backend == "None")
     {
-        QMessageBox::warning(this, "OCR 未配置",
-                             "当前平台需要安装并配置 Tesseract OCR 库才能使用此功能。\n\n"
-                             "请下载 Tesseract 开发库并在 ScreenSniper.pro 中启用 USE_TESSERACT 选项。");
+        QMessageBox::warning(this, getText("ocr_not_configured_title", "OCR 未配置"),
+                             getText("ocr_not_configured_msg", "当前平台需要安装并配置 Tesseract OCR 库才能使用此功能。\n\n请下载 Tesseract 开发库并在 ScreenSniper.pro 中启用 USE_TESSERACT 选项。"));
         return;
     }
 
@@ -3297,22 +3327,19 @@ void ScreenshotWidget::performOCR()
         QClipboard *clipboard = QGuiApplication::clipboard();
         clipboard->setText(text);
 
-        QString msg = "识别到的文字已复制到剪贴板：\n\n" + text;
+        QString msg = getText("ocr_result_copied", "识别到的文字已复制到剪贴板：\n\n") + text;
 
         // macOS 原生 API 的提示
         if (backend == "Native")
         {
-            msg += "\n\n------------------------------------------------\n"
-                   "提示：当前正在使用 macOS 原生 OCR API。\n"
-                   "如果需要更高级的 OCR 功能（如更多语言支持），\n"
-                   "请安装 Tesseract 库并在项目中进行配置。";
+            msg += "\n\n------------------------------------------------\n" + getText("ocr_macos_tip", "提示：当前正在使用 macOS 原生 OCR API。\n如果需要更高级的 OCR 功能（如更多语言支持），\n请安装 Tesseract 库并在项目中进行配置。");
         }
 
-        QMessageBox::information(this, "OCR 完成", msg);
+        QMessageBox::information(this, getText("ocr_complete_title", "OCR 完成"), msg);
     }
     else
     {
-        QString errorMsg = text.isEmpty() ? "未能识别到文字。" : text;
-        QMessageBox::warning(this, "OCR 失败", errorMsg);
+        QString errorMsg = text.isEmpty() ? getText("ocr_no_text", "未能识别到文字。") : text;
+        QMessageBox::warning(this, getText("ocr_failed_title", "OCR 失败"), errorMsg);
     }
 }

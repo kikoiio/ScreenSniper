@@ -13,6 +13,10 @@ public:
     // 构造函数：接收一张截图图片
     explicit PinWidget(const QPixmap &pixmap, QWidget *parent = nullptr);
 
+    // 国际化支持
+    void setMainWindow(QWidget *mainWin) { mainWindow = mainWin; }
+    QString getText(const QString &key, const QString &defaultText = "") const;
+
 protected:
     // 核心绘制：把图片画出来
     void paintEvent(QPaintEvent *event) override;
@@ -31,6 +35,7 @@ private:
     QPixmap m_sourcePixmap; // 原始图片数据
     double m_scale;         // 当前缩放比例
     QPoint m_dragPosition;  // 拖拽时的相对坐标记录
+    QWidget *mainWindow;    // 主窗口指针，用于获取翻译
 };
 
 #endif // PINWIDGET_H
