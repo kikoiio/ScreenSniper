@@ -78,5 +78,6 @@
   "pin_copy": "复制到剪切板",
   "pin_save": "另存为...",
   "pin_close": "关闭贴图",
-  "save_image": "保存图片"
+  "save_image": "保存图片",
+  "tooltip_break": "退出"
 }

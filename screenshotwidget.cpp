@@ -182,6 +182,8 @@ void ScreenshotWidget::updateTooltips()
         btnPin->setToolTip(getText("tooltip_pin", "贴图"));
     if (btnCancel)
         btnCancel->setToolTip(getText("tooltip_cancel", "取消"));
+    if (btnBreak)
+        btnBreak->setToolTip(getText("tooltip_break", "退出"));
 
     // 更新形状工具栏按钮的工具提示
     if (btnRect)
@@ -281,6 +283,12 @@ void ScreenshotWidget::setupToolbar()
     btnCancel->setToolTip(getText("tooltip_cancel", "取消"));
     btnCancel->setFixedSize(36, 36);
 
+    btnBreak = new QPushButton(toolbar);
+    btnBreak->setIcon(QIcon(":/icons/icons/break.svg"));
+    btnBreak->setIconSize(QSize(20, 20));
+    btnBreak->setToolTip(getText("tooltip_break", "退出"));
+    btnBreak->setFixedSize(36, 36);
+
     layout->addWidget(btnShapes);
     layout->addWidget(btnText);
     layout->addWidget(btnPen);
@@ -297,6 +305,7 @@ void ScreenshotWidget::setupToolbar()
     layout->addWidget(btnCopy);
     layout->addWidget(btnPin);
     layout->addWidget(btnCancel);
+    layout->addWidget(btnBreak);
 
     // 子工具栏（马赛克强度调节）
     EffectToolbar = new QWidget(this);
@@ -326,6 +335,7 @@ void ScreenshotWidget::setupToolbar()
     connect(btnCopy, &QPushButton::clicked, this, &ScreenshotWidget::copyToClipboard);
     connect(btnPin, &QPushButton::clicked, this, &ScreenshotWidget::pinToDesktop);
     connect(btnCancel, &QPushButton::clicked, this, &ScreenshotWidget::cancelCapture);
+    connect(btnBreak, &QPushButton::clicked, this, &ScreenshotWidget::breakCapture);
     connect(btnOCR, &QPushButton::clicked, this, &ScreenshotWidget::performOCR);
 
     connect(btnShapes, &QPushButton::clicked, this, [this]()
@@ -1591,6 +1601,11 @@ void ScreenshotWidget::cancelCapture()
     }
     // QApplication::quit()
     close();
+}
+
+void ScreenshotWidget::breakCapture()
+{
+    QApplication::quit();
 }
 
 void ScreenshotWidget::updateToolbarPosition()

@@ -161,6 +161,7 @@ private:
     void saveScreenshot();
     void copyToClipboard();
     void cancelCapture();
+    void breakCapture();
     void drawArrow(QPainter &painter, const QPointF &start, const QPointF &end, const QColor &color, int width, double scale = 1.0);
     void updateEffectToolbarPosition();
     void updateStrengthLabel();
@@ -231,6 +232,7 @@ private:
     QPushButton *btnSave;
     QPushButton *btnCopy;
     QPushButton *btnCancel;
+    QPushButton *btnBreak;
     QPushButton *btnRect;    // 矩形工具
     QPushButton *btnEllipse; // 椭圆工具
     QPushButton *btnArrow;   // 箭头工具
