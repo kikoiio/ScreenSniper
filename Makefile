@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = /Library/Developer/CommandLineTools/usr/bin/clang
 CXX           = /Library/Developer/CommandLineTools/usr/bin/clang++
-DEFINES       = -DUSE_TESSERACT -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
+DEFINES       = -DUSE_TESSERACT -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 $(EXPORT_ARCH_ARGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=10.13 -Wall -Wextra -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -stdlib=libc++ -O2 $(EXPORT_ARCH_ARGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=10.13 -Wall -Wextra -fPIC $(DEFINES)
-INCPATH       = -I. -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I. -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I. -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -F/opt/homebrew/Cellar/qt@5/5.15.18/lib
+INCPATH       = -I. -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I. -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I. -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -F/opt/homebrew/Cellar/qt@5/5.15.18/lib
 QMAKE         = /opt/homebrew/opt/qt@5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = ScreenSniper1.0.0
 DISTDIR = /Users/ceilf/Desktop/ScreenSniper/.tmp/ScreenSniper1.0.0
 LINK          = /Library/Developer/CommandLineTools/usr/bin/clang++
 LFLAGS        = -stdlib=libc++ -headerpad_max_install_names $(EXPORT_ARCH_ARGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=10.13 -Wl,-rpath,@executable_path/../Frameworks
-LIBS          = $(SUBLIBS) -F/opt/homebrew/Cellar/qt@5/5.15.18/lib -framework CoreGraphics -framework Vision -L/opt/homebrew/lib -ltesseract -lleptonica -L/opt/homebrew/opt/opencv/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -framework QtWidgets -framework QtGui -framework AppKit -framework Metal -framework QtCore -framework DiskArbitration -framework IOKit -framework OpenGL   
+LIBS          = $(SUBLIBS) -F/opt/homebrew/Cellar/qt@5/5.15.18/lib -framework CoreGraphics -framework Vision -L/opt/homebrew/lib -ltesseract -lleptonica -L/opt/homebrew/opt/opencv/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio -framework QtWidgets -framework QtGui -framework AppKit -framework Metal -framework QtNetwork -framework QtCore -framework DiskArbitration -framework IOKit -framework OpenGL   
 AR            = /Library/Developer/CommandLineTools/usr/bin/ar cq
 RANLIB        = /Library/Developer/CommandLineTools/usr/bin/ranlib -s
 SED           = sed
@@ -52,30 +52,40 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = main.cpp \
+SOURCES       = aiconfigmanager.cpp \
+		aimanager.cpp \
+		main.cpp \
 		mainwindow.cpp \
 		pinwidget.cpp \
 		screenshotwidget.cpp \
 		ocrmanager.cpp \
+		ocrresultdialog.cpp \
 		watermark_robust.cpp \
 		i18nmanager.cpp \
 		macocr.mm qrc_resources.cpp \
+		moc_aimanager.cpp \
 		moc_mainwindow.cpp \
 		moc_pinwidget.cpp \
 		moc_screenshotwidget.cpp \
+		moc_ocrresultdialog.cpp \
 		moc_i18nmanager.cpp
-OBJECTS       = main.o \
+OBJECTS       = aiconfigmanager.o \
+		aimanager.o \
+		main.o \
 		mainwindow.o \
 		pinwidget.o \
 		screenshotwidget.o \
 		ocrmanager.o \
+		ocrresultdialog.o \
 		watermark_robust.o \
 		i18nmanager.o \
 		macocr.o \
 		qrc_resources.o \
+		moc_aimanager.o \
 		moc_mainwindow.o \
 		moc_pinwidget.o \
 		moc_screenshotwidget.o \
+		moc_ocrresultdialog.o \
 		moc_i18nmanager.o
 DIST          = /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/spec_pre.prf \
 		/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/qdevice.pri \
@@ -279,16 +289,22 @@ DIST          = /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/spec_pre.prf 
 		/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/yacc.prf \
 		/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/lex.prf \
 		ScreenSniper.pro macocr.h \
+		aiconfigmanager.h \
+		aimanager.h \
 		mainwindow.h \
 		pinwidget.h \
 		screenshotwidget.h \
 		ocrmanager.h \
+		ocrresultdialog.h \
 		watermark_robust.h \
-		i18nmanager.h main.cpp \
+		i18nmanager.h aiconfigmanager.cpp \
+		aimanager.cpp \
+		main.cpp \
 		mainwindow.cpp \
 		pinwidget.cpp \
 		screenshotwidget.cpp \
 		ocrmanager.cpp \
+		ocrresultdialog.cpp \
 		watermark_robust.cpp \
 		i18nmanager.cpp \
 		macocr.mm
@@ -521,6 +537,7 @@ Makefile: ScreenSniper.pro /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang/
 		resources.qrc \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Resources/QtWidgets.prl \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Resources/QtGui.prl \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Resources/QtNetwork.prl \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Resources/QtCore.prl
 	$(QMAKE) -o Makefile ScreenSniper.pro
 /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/spec_pre.prf:
@@ -728,6 +745,7 @@ ScreenSniper.pro:
 resources.qrc:
 /opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Resources/QtWidgets.prl:
 /opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Resources/QtGui.prl:
+/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Resources/QtNetwork.prl:
 /opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Resources/QtCore.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile ScreenSniper.pro
@@ -760,8 +778,8 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents resources.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents macocr.h mainwindow.h pinwidget.h screenshotwidget.h ocrmanager.h watermark_robust.h i18nmanager.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp mainwindow.cpp pinwidget.cpp screenshotwidget.cpp ocrmanager.cpp watermark_robust.cpp i18nmanager.cpp macocr.mm $(DISTDIR)/
+	$(COPY_FILE) --parents macocr.h aiconfigmanager.h aimanager.h mainwindow.h pinwidget.h screenshotwidget.h ocrmanager.h ocrresultdialog.h watermark_robust.h i18nmanager.h $(DISTDIR)/
+	$(COPY_FILE) --parents aiconfigmanager.cpp aimanager.cpp main.cpp mainwindow.cpp pinwidget.cpp screenshotwidget.cpp ocrmanager.cpp ocrresultdialog.cpp watermark_robust.cpp i18nmanager.cpp macocr.mm $(DISTDIR)/
 	$(COPY_FILE) --parents mainwindow.ui $(DISTDIR)/
 
 
@@ -802,6 +820,7 @@ qrc_resources.cpp: resources.qrc \
 		icons/shapes.svg \
 		icons/text.svg \
 		icons/ocr.svg \
+		icons/aidesc.svg \
 		icons/pin.svg \
 		icons/cancel.svg \
 		icons/ellipse.svg \
@@ -812,8 +831,7 @@ qrc_resources.cpp: resources.qrc \
 		icons/color_picker.svg \
 		locales/en.json \
 		locales/zh.json \
-		locales/zhHK.json \
-		icons/aidesc.svg
+		locales/zhHK.json
 	/opt/homebrew/Cellar/qt@5/5.15.18/bin/rcc -name resources resources.qrc -o qrc_resources.cpp
 
 compiler_moc_predefs_make_all: moc_predefs.h
@@ -822,9 +840,30 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/data/dummy.cpp
 	/Library/Developer/CommandLineTools/usr/bin/clang++ -pipe -stdlib=libc++ -O2 $(EXPORT_ARCH_ARGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=10.13 -Wall -Wextra -dM -E -o moc_predefs.h /opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_mainwindow.cpp moc_pinwidget.cpp moc_screenshotwidget.cpp moc_i18nmanager.cpp
+compiler_moc_header_make_all: moc_aimanager.cpp moc_mainwindow.cpp moc_pinwidget.cpp moc_screenshotwidget.cpp moc_ocrresultdialog.cpp moc_i18nmanager.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_mainwindow.cpp moc_pinwidget.cpp moc_screenshotwidget.cpp moc_i18nmanager.cpp
+	-$(DEL_FILE) moc_aimanager.cpp moc_mainwindow.cpp moc_pinwidget.cpp moc_screenshotwidget.cpp moc_ocrresultdialog.cpp moc_i18nmanager.cpp
+moc_aimanager.cpp: aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
+		moc_predefs.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib aimanager.h -o moc_aimanager.cpp
+
 moc_mainwindow.cpp: mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QMainWindow \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qmainwindow.h \
@@ -848,13 +887,10 @@ moc_mainwindow.cpp: mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
 		screenshotwidget.h \
-		pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRect \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrect.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
@@ -863,15 +899,33 @@ moc_mainwindow.cpp: mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QColor \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qcolor.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPointer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpointer.h \
+		pinwidget.h \
+		aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
 		moc_predefs.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
-	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib mainwindow.h -o moc_mainwindow.cpp
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib mainwindow.h -o moc_mainwindow.cpp
 
 moc_pinwidget.cpp: pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
@@ -882,16 +936,13 @@ moc_pinwidget.cpp: pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		moc_predefs.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
-	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib pinwidget.h -o moc_pinwidget.cpp
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib pinwidget.h -o moc_pinwidget.cpp
 
 moc_screenshotwidget.cpp: screenshotwidget.h \
-		pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRect \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrect.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
@@ -900,12 +951,16 @@ moc_screenshotwidget.cpp: screenshotwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QColor \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qcolor.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPointer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpointer.h \
 		i18nmanager.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qobject.h \
@@ -919,9 +974,39 @@ moc_screenshotwidget.cpp: screenshotwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qlist.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
+		pinwidget.h \
+		aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
 		moc_predefs.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
-	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib screenshotwidget.h -o moc_screenshotwidget.cpp
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib screenshotwidget.h -o moc_screenshotwidget.cpp
+
+moc_ocrresultdialog.cpp: ocrresultdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QVBoxLayout \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qboxlayout.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QHBoxLayout \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLabel \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
+		moc_predefs.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib ocrresultdialog.h -o moc_ocrresultdialog.cpp
 
 moc_i18nmanager.cpp: i18nmanager.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
@@ -938,7 +1023,7 @@ moc_i18nmanager.cpp: i18nmanager.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
 		moc_predefs.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc
-	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib i18nmanager.h -o moc_i18nmanager.cpp
+	/opt/homebrew/Cellar/qt@5/5.15.18/bin/moc $(DEFINES) --include /Users/ceilf/Desktop/ScreenSniper/moc_predefs.h -I/opt/homebrew/Cellar/qt@5/5.15.18/mkspecs/macx-clang -I/Users/ceilf/Desktop/ScreenSniper -I/opt/homebrew/include -I/opt/homebrew/opt/opencv/include/opencv4 -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers -I/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/17/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/Cellar/qt@5/5.15.18/lib i18nmanager.h -o moc_i18nmanager.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -963,6 +1048,49 @@ compiler_clean: compiler_rcc_clean compiler_moc_predefs_clean compiler_moc_heade
 
 ####### Compile
 
+aiconfigmanager.o: aiconfigmanager.cpp aiconfigmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qstring.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QSettings \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qsettings.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QCoreApplication \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qcoreapplication.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QFile \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qfile.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QDir \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qdir.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o aiconfigmanager.o aiconfigmanager.cpp
+
+aimanager.o: aimanager.cpp aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
+		aiconfigmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qstring.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QSettings \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qsettings.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QCoreApplication \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qcoreapplication.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QFile \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qfile.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QDir \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qdir.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o aimanager.o aimanager.cpp
+
 main.o: main.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QMainWindow \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qmainwindow.h \
@@ -986,13 +1114,10 @@ main.o: main.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
 		screenshotwidget.h \
-		pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRect \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrect.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
@@ -1001,12 +1126,30 @@ main.o: main.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QColor \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qcolor.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPointer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpointer.h \
+		pinwidget.h \
+		aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QApplication \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qapplication.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
@@ -1034,13 +1177,10 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
 		screenshotwidget.h \
-		pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRect \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrect.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
@@ -1049,12 +1189,30 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QColor \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qcolor.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPointer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpointer.h \
+		pinwidget.h \
+		aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
 		ui_mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QMessageBox \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qmessagebox.h \
@@ -1078,8 +1236,6 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qsettings.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QFile \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qfile.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QDebug \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qdebug.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDialog \
@@ -1119,13 +1275,10 @@ pinwidget.o: pinwidget.cpp pinwidget.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o pinwidget.o pinwidget.cpp
 
 screenshotwidget.o: screenshotwidget.cpp screenshotwidget.h \
-		pinwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QWidget \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRect \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrect.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
@@ -1134,12 +1287,16 @@ screenshotwidget.o: screenshotwidget.cpp screenshotwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPoint \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpoint.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QColor \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qcolor.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QPointer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qpointer.h \
 		i18nmanager.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qobject.h \
@@ -1153,6 +1310,26 @@ screenshotwidget.o: screenshotwidget.cpp screenshotwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qlist.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
+		pinwidget.h \
+		aimanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/QNetworkReply \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtNetwork.framework/Headers/qnetworkreply.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonDocument \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsondocument.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonArray \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonarray.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
+		ocrresultdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QVBoxLayout \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qboxlayout.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QHBoxLayout \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPainter \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpainter.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPainterPath \
@@ -1178,9 +1355,6 @@ screenshotwidget.o: screenshotwidget.cpp screenshotwidget.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qdebug.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QTimer \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qtimer.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QVBoxLayout \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qboxlayout.h \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QHBoxLayout \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QDesktopServices \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qdesktopservices.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QtMath \
@@ -1515,11 +1689,11 @@ screenshotwidget.o: screenshotwidget.cpp screenshotwidget.h \
 		/opt/homebrew/opt/opencv/include/opencv4/opencv2/video/background_segm.hpp \
 		watermark_robust.h \
 		ocrmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QCache \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qcache.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QSpinBox \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qspinbox.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDoubleSpinBox \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDialog \
-		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qdialog.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QMessageBox \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qmessagebox.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o screenshotwidget.o screenshotwidget.cpp
@@ -1529,12 +1703,22 @@ ocrmanager.o: ocrmanager.cpp ocrmanager.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qstring.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QPixmap \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qpixmap.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QCache \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qcache.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qimage.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QDebug \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qdebug.h \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QBuffer \
 		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qbuffer.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QThreadPool \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qthreadpool.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QRunnable \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qrunnable.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QFuture \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qfuture.h \
 		/opt/homebrew/include/tesseract/baseapi.h \
 		/opt/homebrew/include/tesseract/export.h \
 		/opt/homebrew/include/tesseract/pageiterator.h \
@@ -1573,6 +1757,43 @@ ocrmanager.o: ocrmanager.cpp ocrmanager.h \
 		/opt/homebrew/include/leptonica/watershed.h \
 		macocr.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ocrmanager.o ocrmanager.cpp
+
+ocrresultdialog.o: ocrresultdialog.cpp ocrresultdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QTextEdit \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qtextedit.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QPushButton \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QVBoxLayout \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qboxlayout.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QHBoxLayout \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/QLabel \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtWidgets.framework/Headers/qlabel.h \
+		i18nmanager.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qstring.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QJsonObject \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qjsonobject.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMap \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmap.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QList \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qlist.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QMutex \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qmutex.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QClipboard \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qclipboard.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QGuiApplication \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qguiapplication.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QScreen \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qscreen.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/QFont \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtGui.framework/Headers/qfont.h \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/QTimer \
+		/opt/homebrew/Cellar/qt@5/5.15.18/lib/QtCore.framework/Headers/qtimer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ocrresultdialog.o ocrresultdialog.cpp
 
 watermark_robust.o: watermark_robust.cpp watermark_robust.h \
 		/opt/homebrew/opt/opencv/include/opencv4/opencv2/opencv.hpp \
@@ -1942,6 +2163,9 @@ macocr.o: macocr.mm macocr.h \
 qrc_resources.o: qrc_resources.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_resources.o qrc_resources.cpp
 
+moc_aimanager.o: moc_aimanager.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_aimanager.o moc_aimanager.cpp
+
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
 
@@ -1950,6 +2174,9 @@ moc_pinwidget.o: moc_pinwidget.cpp
 
 moc_screenshotwidget.o: moc_screenshotwidget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_screenshotwidget.o moc_screenshotwidget.cpp
+
+moc_ocrresultdialog.o: moc_ocrresultdialog.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_ocrresultdialog.o moc_ocrresultdialog.cpp
 
 moc_i18nmanager.o: moc_i18nmanager.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_i18nmanager.o moc_i18nmanager.cpp
