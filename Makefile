@@ -812,7 +812,8 @@ qrc_resources.cpp: resources.qrc \
 		icons/color_picker.svg \
 		locales/en.json \
 		locales/zh.json \
-		locales/zhHK.json
+		locales/zhHK.json \
+		icons/aidesc.svg
 	/opt/homebrew/Cellar/qt@5/5.15.18/bin/rcc -name resources resources.qrc -o qrc_resources.cpp
 
 compiler_moc_predefs_make_all: moc_predefs.h
